@@ -43,6 +43,8 @@ namespace Microsoft.AspNet.Mvc
         /// </summary>
         public bool? ExcludeMatchOnTypeOnly { get; set; }
 
+        public IOutputFormatter FallbackFormatter { get; set; }
+
         public override async Task ExecuteResultAsync(ActionContext context)
         {
             // See if the list of content types added to this object result is valid.
@@ -59,9 +61,15 @@ namespace Microsoft.AspNet.Mvc
             var selectedFormatter = SelectFormatter(formatterContext, formatters);
             if (selectedFormatter == null)
             {
-                // No formatter supports this.
-                context.HttpContext.Response.StatusCode = StatusCodes.Status406NotAcceptable;
-                return;
+                var options = formatterContext.ActionContext.HttpContext
+                                                            .RequestServices
+                                                            .GetRequiredService<IOptions<MvcOptions>>()
+                                                            .Options;
+                selectedFormatter = FallbackFormatter ?? options.FallbackFormatter?.Instance;
+                if (selectedFormatter == null)
+                {
+                    context.HttpContext.Response.StatusCode = StatusCodes.Status406NotAcceptable;
+                }
             }
 
             if (StatusCode.HasValue)
@@ -102,7 +110,7 @@ namespace Microsoft.AspNet.Mvc
             {
                 respectAcceptHeader = false;
             }
-            
+
             IEnumerable<MediaTypeHeaderValue> sortedAcceptHeaderMediaTypes = null;
             if (respectAcceptHeader)
             {

@@ -5,6 +5,7 @@ using System;
 using System.Xml.Linq;
 using Microsoft.AspNet.Mvc.ModelBinding;
 using Microsoft.AspNet.Mvc.ModelBinding.Metadata;
+using Microsoft.AspNet.Mvc.OptionDescriptors;
 using Microsoft.AspNet.Mvc.Razor;
 using Microsoft.Framework.OptionsModel;
 using Microsoft.Net.Http.Headers;
@@ -48,6 +49,8 @@ namespace Microsoft.AspNet.Mvc
             options.OutputFormatters.Add(new StringOutputFormatter());
             options.OutputFormatters.Add(new StreamOutputFormatter());
             options.OutputFormatters.Add(new JsonOutputFormatter());
+
+            options.FallbackFormatter = new OutputFormatterDescriptor(new HttpNotAcceptableOutputFormatter());
 
             // Set up default mapping for json extensions to content type
             options.FormatterMappings.SetMediaTypeMappingForFormat("json", MediaTypeHeaderValue.Parse("application/json"));
